@@ -19,7 +19,7 @@ void cambiarPrioridad(List* lista, int id, int nueva_prioridad) {
         return;
     }
 
-    // Guardar puntero al ticket actual (que será eliminado)
+    // Guardar puntero al ticket actual
     Ticket* ticketMovido = t;
 
     // Actualizar prioridad
@@ -51,7 +51,7 @@ int main() {
     // Contador de IDs automáticos
     int contadorId = 1;
 
-    // Crear ticket de ejemplo (puedes borrar esto si no quieres pruebas)
+    // Crear ticket de ejemplo 
     Ticket* nuevo = (Ticket*) malloc(sizeof(Ticket));
     *nuevo = crearTicket(contadorId++, 2); // prioridad media 2
 
