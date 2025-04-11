@@ -2,64 +2,120 @@
 #include <stdlib.h>
 #include <string.h>
 #include <time.h>
-#include "ticket.h"  
-#include "list.h"    
+#include "list.h"
+#include "ticket.h"
+#include "extra.h"
 
-void cambiarPrioridad(List* lista, int id, int nueva_prioridad) {
+void mostrarMenu() {
+    limpiarPantalla();
+    puts("======================================");
+    puts("     Sistema de Tickets de Soporte");
+    puts("======================================");
+    puts("1) Registrar ticket");
+    puts("2) Cambiar prioridad de ticket");
+    puts("3) Mostrar lista de tickets");
+    puts("4) Atender siguiente ticket");
+    puts("5) Buscar ticket por ID");
+    puts("6) Salir");
+}
+
+void registrar_ticket(List* lista, int* idCounter) {
+    char descripcion[100];
+    puts("Registro de nuevo ticket");
+    printf("Ingrese descripción del problema: ");
+    fgets(descripcion, sizeof(descripcion), stdin);
+    descripcion[strcspn(descripcion, "\n")] = 0;
+
+    Ticket* nuevo = malloc(sizeof(Ticket));
+    *nuevo = crearTicket(*idCounter, 1); // prioridad baja por defecto
+    strcpy(nuevo->descripcion, descripcion);
+
+    insertarOrdenadoPorPrioridad(lista, nuevo);
+
+    printf("Ticket ID %d registrado con prioridad Baja\n", *idCounter);
+    (*idCounter)++;
+}
+
+
+
+void cambiar_prioridad(List* lista) {
+    int id, prioridad;
+    printf("Ingrese ID del ticket: ");
+    scanf("%d", &id);
+    printf("Ingrese nueva prioridad (1 = Baja, 2 = Media, 3 = Alta): ");
+    scanf("%d", &prioridad);
+    getchar();
+    cambiarPrioridad(lista, id, prioridad);
+}
+
+void mostrar_lista(List* lista) {
     Ticket* t = firstList(lista);
+    if (!t) {
+        puts("No hay tickets registrados.");
+        return;
+    }
 
-    // Buscar el ticket con el ID correspondiente
-    while (t != NULL) {
+    puts("Lista de Tickets Pendientes:");
+    while (t) {
+        mostrarTicket(t);
+        t = nextList(lista);
+    }
+}
+
+void atender_ticket(List* lista) {
+    Ticket* t = firstList(lista);
+    if (!t) {
+        puts("No hay tickets pendientes.");
+        return;
+    }
+
+    puts("Ticket en atención:");
+    mostrarTicket(t);
+    popFront(lista);
+    puts("Ticket eliminado de la lista.");
+}
+
+void buscar_ticket(List* lista) {
+    int id;
+    printf("Ingrese ID a buscar: ");
+    scanf("%d", &id);
+    getchar();
+
+    Ticket* t = firstList(lista);
+    while (t) {
         if (t->id == id) break;
         t = nextList(lista);
     }
 
-    if (t == NULL) {
-        printf("Ticket con ID %d no encontrado.\n", id);
-        return;
-    }
-
-    // Guardar puntero al ticket actual
-    Ticket* ticketMovido = t;
-
-    // Actualizar prioridad
-    ticketMovido->prioridad = nueva_prioridad;
-
-    // Sacar el ticket de la lista actual
-    popCurrent(lista);
-
-    // Recorrer lista para encontrar su nueva posición
-    Ticket* aux = firstList(lista);
-    while (aux != NULL && aux->prioridad >= ticketMovido->prioridad) {
-        aux = nextList(lista);
-    }
-
-    // Insertar en la posición correcta
-    if (aux == NULL) {
-        pushBack(lista, ticketMovido);  
-    } else {
-        pushCurrent(lista, ticketMovido);  
-    }
-
-    printf("Prioridad del ticket ID %d actualizada a %d y reordenada.\n", id, nueva_prioridad);
+    if (t) mostrarTicket(t);
+    else printf("Ticket con ID %d no encontrado.\n", id);
 }
 
 int main() {
-    // Crear lista para guardar tickets
-    List* listaTickets = createList();
+    List* tickets = createList();
+    int idCounter = 1;
+    char opcion;
 
-    // Contador de IDs automáticos
-    int contadorId = 1;
+    do {
+        mostrarMenu();
+        printf("Ingrese su opción: ");
+        scanf(" %c", &opcion);
+        getchar();
 
-    // Crear ticket de ejemplo 
-    Ticket* nuevo = (Ticket*) malloc(sizeof(Ticket));
-    *nuevo = crearTicket(contadorId++, 2); // prioridad media 2
+        switch (opcion) {
+            case '1': registrar_ticket(tickets, &idCounter); break;
+            case '2': cambiar_prioridad(tickets); break;
+            case '3': mostrar_lista(tickets); break;
+            case '4': atender_ticket(tickets); break;
+            case '5': buscar_ticket(tickets); break;
+            case '6': puts("Saliendo del sistema..."); break;
+            default:  puts("Opción no válida.");
+        }
 
-    // Mostrar ticket
-    mostrarTicket(nuevo);
+        if (opcion != '6') presioneTeclaParaContinuar();
 
-    // Agregarlo a la lista
-    pushBack(listaTickets, nuevo);
+    } while (opcion != '6');
 
+    cleanList(tickets); // liberar memoria
     return 0;
 }
