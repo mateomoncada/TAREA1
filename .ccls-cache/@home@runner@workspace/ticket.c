@@ -5,16 +5,17 @@
 #include "ticket.h"
 #include "list.h"
 
-Ticket crearTicket(int id, int prioridad) {
+Ticket crearTicket(int id, int prioridad, int ordenLlegada) {
     Ticket t;
     t.id = id;
     t.prioridad = prioridad;
+    t.ordenLlegada = ordenLlegada;
 
     time_t now = time(NULL);
     struct tm* tm_info = localtime(&now);
     strftime(t.hora, sizeof(t.hora), "%H:%M", tm_info);
 
-    t.descripcion[0] = '\0'; // Inicializa la descripción como vacía
+    t.descripcion[0] = '\0';
     return t;
 }
 
@@ -43,32 +44,21 @@ void cambiarPrioridad(List* lista, int id, int nueva_prioridad) {
     Ticket* ticketMovido = t;
     ticketMovido->prioridad = nueva_prioridad;
     popCurrent(lista);
-
-    Ticket* aux = firstList(lista);
-    while (aux != NULL) {
-        if (aux->prioridad < ticketMovido->prioridad) break;
-        if (aux->prioridad == ticketMovido->prioridad) {
-            if (strcmp(ticketMovido->hora, aux->hora) < 0) break;
-        }
-        aux = nextList(lista);
-    }
-
-    if (aux == NULL)
-        pushBack(lista, ticketMovido);
-    else
-        pushCurrent(lista, ticketMovido);
-
-    printf("Prioridad actualizada.\n");
+    insertarOrdenadoPorPrioridad(lista, ticketMovido);
 }
 
 void insertarOrdenadoPorPrioridad(List* lista, Ticket* nuevo) {
     Ticket* aux = firstList(lista);
 
     while (aux != NULL) {
-        if (aux->prioridad < nuevo->prioridad) break;
-        if (aux->prioridad == nuevo->prioridad) {
+        if (nuevo->prioridad > aux->prioridad) break;
+
+        if (nuevo->prioridad == aux->prioridad) {
             if (strcmp(nuevo->hora, aux->hora) < 0) break;
+            if (strcmp(nuevo->hora, aux->hora) == 0 &&
+                nuevo->ordenLlegada < aux->ordenLlegada) break;
         }
+
         aux = nextList(lista);
     }
 

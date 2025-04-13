@@ -1,62 +1,61 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <time.h>
-#include "list.h"
 #include "ticket.h"
+#include "list.h"
 #include "extra.h"
 
-void mostrarMenu() {
-    limpiarPantalla();
-    puts("======================================");
-    puts("     Sistema de Tickets de Soporte");
-    puts("======================================");
-    puts("1) Registrar ticket");
-    puts("2) Cambiar prioridad de ticket");
-    puts("3) Mostrar lista de tickets");
-    puts("4) Atender siguiente ticket");
-    puts("5) Buscar ticket por ID");
-    puts("6) Salir");
+void mostrar_menu() {
+    printf("========================================\n");
+    printf("     Sistema de Tickets de Soporte\n");
+    printf("========================================\n");
+    printf("1) Registrar ticket\n");
+    printf("2) Cambiar prioridad de ticket\n");
+    printf("3) Mostrar lista de tickets\n");
+    printf("4) Atender siguiente ticket\n");
+    printf("5) Buscar ticket por ID\n");
+    printf("6) Salir\n");
+    printf("========================================\n");
 }
 
-void registrar_ticket(List* lista, int* idCounter) {
+void registrar_ticket(List* lista, int* idCounter, int* ordenLlegada) {
     char descripcion[100];
+
     puts("Registro de nuevo ticket");
-    printf("Ingrese descripción del problema: ");
+    printf("Ingrese descripción breve del problema: ");
     fgets(descripcion, sizeof(descripcion), stdin);
     descripcion[strcspn(descripcion, "\n")] = 0;
 
     Ticket* nuevo = malloc(sizeof(Ticket));
-    *nuevo = crearTicket(*idCounter, 1); // prioridad baja por defecto
+    *nuevo = crearTicket(*idCounter, 1, *ordenLlegada); // Prioridad baja por defecto
     strcpy(nuevo->descripcion, descripcion);
 
     insertarOrdenadoPorPrioridad(lista, nuevo);
 
     printf("Ticket ID %d registrado con prioridad Baja\n", *idCounter);
     (*idCounter)++;
+    (*ordenLlegada)++;
 }
-
-
 
 void cambiar_prioridad(List* lista) {
-    int id, prioridad;
-    printf("Ingrese ID del ticket: ");
+    int id, nueva;
+    printf("Ingrese ID del ticket a modificar: ");
     scanf("%d", &id);
     printf("Ingrese nueva prioridad (1 = Baja, 2 = Media, 3 = Alta): ");
-    scanf("%d", &prioridad);
-    getchar();
-    cambiarPrioridad(lista, id, prioridad);
+    scanf("%d", &nueva);
+    getchar(); // consumir newline
+    cambiarPrioridad(lista, id, nueva);
 }
 
-void mostrar_lista(List* lista) {
+void mostrar_tickets(List* lista) {
     Ticket* t = firstList(lista);
     if (!t) {
-        puts("No hay tickets registrados.");
+        printf("No hay tickets registrados.\n");
         return;
     }
 
-    puts("Lista de Tickets Pendientes:");
-    while (t) {
+    printf("\nLista de Tickets Pendientes:\n");
+    while (t != NULL) {
         mostrarTicket(t);
         t = nextList(lista);
     }
@@ -65,14 +64,13 @@ void mostrar_lista(List* lista) {
 void atender_ticket(List* lista) {
     Ticket* t = firstList(lista);
     if (!t) {
-        puts("No hay tickets pendientes.");
+        printf("No hay tickets pendientes.\n");
         return;
     }
 
-    puts("Ticket en atención:");
+    printf("\nProcesando siguiente ticket:\n");
     mostrarTicket(t);
     popFront(lista);
-    puts("Ticket eliminado de la lista.");
 }
 
 void buscar_ticket(List* lista) {
@@ -82,40 +80,56 @@ void buscar_ticket(List* lista) {
     getchar();
 
     Ticket* t = firstList(lista);
-    while (t) {
-        if (t->id == id) break;
+    while (t != NULL) {
+        if (t->id == id) {
+            mostrarTicket(t);
+            return;
+        }
         t = nextList(lista);
     }
 
-    if (t) mostrarTicket(t);
-    else printf("Ticket con ID %d no encontrado.\n", id);
+    printf("Ticket no encontrado.\n");
 }
 
 int main() {
-    List* tickets = createList();
+    List* lista = createList();
+    int opcion;
     int idCounter = 1;
-    char opcion;
+    int ordenLlegada = 1;
 
     do {
-        mostrarMenu();
+        limpiarPantalla();
+        mostrar_menu();
         printf("Ingrese su opción: ");
-        scanf(" %c", &opcion);
+        scanf("%d", &opcion);
         getchar();
 
         switch (opcion) {
-            case '1': registrar_ticket(tickets, &idCounter); break;
-            case '2': cambiar_prioridad(tickets); break;
-            case '3': mostrar_lista(tickets); break;
-            case '4': atender_ticket(tickets); break;
-            case '5': buscar_ticket(tickets); break;
-            case '6': puts("Saliendo del sistema..."); break;
-            default:  puts("Opción no válida.");
+            case 1:
+                registrar_ticket(lista, &idCounter, &ordenLlegada);
+                break;
+            case 2:
+                cambiar_prioridad(lista);
+                break;
+            case 3:
+                mostrar_tickets(lista);
+                break;
+            case 4:
+                atender_ticket(lista);
+                break;
+            case 5:
+                buscar_ticket(lista);
+                break;
+            case 6:
+                printf("Saliendo...\n");
+                break;
+            default:
+                printf("Opción inválida.\n");
         }
 
-        if (opcion != '6') presioneTeclaParaContinuar();
+        presioneTeclaParaContinuar();
 
-    } while (opcion != '6');
+    } while (opcion != 6);
 
-    cleanList(tickets); // liberar memoria
     return 0;
 }

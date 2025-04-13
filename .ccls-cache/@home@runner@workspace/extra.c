@@ -4,10 +4,11 @@
 
 void limpiarPantalla() {
 #ifdef _WIN32
-    system("cls");
+    system("cls"); // system("cls"); // Para Windows
 #else
-    system("clear");
-#endif
+    system("clear"); // system("clear"); // Para Unix/Linux/MacOS
+#endif    
+    
 }
 
 void presioneTeclaParaContinuar() {
